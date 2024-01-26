@@ -2,11 +2,11 @@ using Amazon.Lambda.Core;
 
 namespace ScreenShotLambda.Interfaces
 {
-    // §Ö·Ó¤¶­±
+    // å¿«ç…§ä»‹é¢
     public interface IScreenShot
     {
         /// <summary>
-        /// ¶i¦æ§Ö·Ó
+        /// é€²è¡Œå¿«ç…§
         /// </summary>
         /// <param name="screenShotUrl"></param>
         /// <param name="context"></param>
