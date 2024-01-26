@@ -1,17 +1,17 @@
 namespace ScreenShotLambda.DTOs
 {
     /// <summary>
-    /// §Ö·Ó°Ñ¼Æª«¥ó
+    /// å¿«ç…§åƒæ•¸ç‰©ä»¶
     /// </summary>
     public class QueueMessage
     {
         /// <summary>
-        /// §Ö·Óºô§}
+        /// å¿«ç…§ç¶²å€
         /// </summary>
         public string screenShotUrl { get; set; }
 
         /// <summary>
-        /// ­«¸Õ¦¸¼Æ
+        /// é‡è©¦æ¬¡æ•¸
         /// </summary>
         public int retryCount { get; set; }
     }
