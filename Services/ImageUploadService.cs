@@ -32,7 +32,7 @@ namespace ScreenShotLambda.Services
                 // 設定 S3 所需參數
                 PutObjectRequest request = new PutObjectRequest
                 {
-                    BucketName = "labpdinfo.senao.com.tw",
+                    BucketName = "your bucket name",
                     Key = $"screenShot.jpg",
                     ContentType = "image/jpg",
                     FilePath = $"/tmp/screenShot.jpg",
