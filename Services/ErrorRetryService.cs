@@ -62,7 +62,7 @@ namespace ScreenShotLambda.Services
                         // SQS 訊息格式
                         var request = new SendMessageRequest
                         {
-                            QueueUrl = "https://sqs.ap-northeast-1.amazonaws.com/781160412246/ScreenShot_Queue",
+                            QueueUrl = "your queue url",  // ex. https://sqs.ap-northeast-1.amazonaws.com/123456789/ScreenShot_Queue
                             MessageBody = jsonQueueData,
                         };
 
@@ -99,7 +99,7 @@ namespace ScreenShotLambda.Services
             {
                 var request = new DeleteMessageRequest
                 {
-                    QueueUrl = "https://sqs.ap-northeast-1.amazonaws.com/781160412246/ScreenShot_Queue",
+                    QueueUrl = "your queue url",  // ex. https://sqs.ap-northeast-1.amazonaws.com/123456789/ScreenShot_Queue
                     ReceiptHandle = message.ReceiptHandle,
                 };
 
