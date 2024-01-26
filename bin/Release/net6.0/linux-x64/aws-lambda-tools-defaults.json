@@ -1,0 +1,29 @@
+
+{
+    "Information" : [
+        "This file provides default values for the deployment wizard inside Visual Studio and the AWS Lambda commands added to the .NET Core CLI.",
+        "To learn more about the Lambda commands with the .NET Core CLI execute the following command at the command line in the project root directory.",
+        "dotnet lambda help",
+        "All the command line options for the Lambda command can be specified in this file."
+    ],
+    "profile"     : "lab-018491-andy",
+    "region"      : "ap-northeast-1",
+    "configuration" : "Release",
+    "function-runtime" : "dotnet6",
+    "function-memory-size" : 1536,
+    "function-timeout"     : 60,
+    "function-handler"     : "ScreenShotLambda::ScreenShotLambda.Function::FunctionHandler",
+    "package-type"         : "Image",
+    "docker-host-build-output-dir" : "./bin/Release/lambda-publish",
+    "function-name"                : "ScreenShotLambda",
+    "function-description"         : "",
+    "function-role"                : "arn:aws:iam::781160412246:role/labScreenShotRole",
+    "function-architecture"        : "x86_64",
+    "image-command"                : "",
+    "function-subnets"             : "subnet-507cb919,subnet-e91d24b1",
+    "function-security-groups"     : "sg-3d31f845",
+    "tracing-mode"                 : "PassThrough",
+    "dockerfile"                   : "Dockerfile",
+    "image-tag"                    : "screenshot-repository:latest",
+    "environment-variables"        : ""
+}
