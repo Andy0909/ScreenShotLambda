@@ -48,7 +48,7 @@ namespace ScreenShotLambda.Services
                 var content = new StringContent(jsonRequestData, Encoding.UTF8, "application/json");
 
                 // 發送 POST 請求
-                var response = await this.httpClient.PostAsync("https://senaoaz.webhook.office.com/webhookb2/e2981449-f205-4ddd-a118-32600d838400@7fbd8d8d-fe50-4c00-9d17-e6997c474f9b/IncomingWebhook/d1f3d9e9a4bd44ee8fda9593d37045ff/1d05bc54-6c6b-4336-ad77-3d908535b310", content);
+                var response = await this.httpClient.PostAsync("your teams webhook url", content);
             }
             catch (Exception e)
             {
