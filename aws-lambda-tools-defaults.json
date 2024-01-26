@@ -6,7 +6,7 @@
         "dotnet lambda help",
         "All the command line options for the Lambda command can be specified in this file."
     ],
-    "profile"     : "lab-018491-andy",
+    "profile"     : "",
     "region"      : "ap-northeast-1",
     "configuration" : "Release",
     "function-runtime" : "dotnet6",
