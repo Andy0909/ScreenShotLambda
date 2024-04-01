@@ -22,10 +22,10 @@
   </ItemGroup>
   
   <ItemGroup>
-    <PackageReference Include="Amazon.Lambda.Core" Version="2.2.0" />
+    	<PackageReference Include="Amazon.Lambda.Core" Version="2.2.0" />
 	<PackageReference Include="AWSSDK.Lambda" Version="3.7.303.28" />
-    <PackageReference Include="Amazon.Lambda.Serialization.SystemTextJson" Version="2.4.0" />
-    <PackageReference Include="Amazon.Lambda.SQSEvents" Version="2.2.0" />
+    	<PackageReference Include="Amazon.Lambda.Serialization.SystemTextJson" Version="2.4.0" />
+    	<PackageReference Include="Amazon.Lambda.SQSEvents" Version="2.2.0" />
 	<PackageReference Include="Amazon.Lambda.TestUtilities" Version="2.0.0" />
 	<PackageReference Include="AWSSDK.S3" Version="3.7.305.3" />
 	<PackageReference Include="AWSSDK.SQS" Version="3.7.300.33" />
@@ -35,8 +35,9 @@
 	<PackageReference Include="Microsoft.Extensions.Logging.Console" Version="6.0.0" />
 	<PackageReference Include="Moq" Version="4.20.70" />
 	<PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-    <PackageReference Include="PuppeteerSharp" Version="13.0.1" />
+    	<PackageReference Include="PuppeteerSharp" Version="13.0.1" />
 	<PackageReference Include="xunit" Version="2.6.6" />
+	<PackageReference Include="Microsoft.Extensions.Http" Version="8.0.0" />
   </ItemGroup>
   
   <ItemGroup>
