@@ -1,5 +1,3 @@
-﻿using Amazon.Lambda.Core;
-
 namespace ScreenShotLambda.Interfaces
 {
     // 異常通知介面
@@ -9,7 +7,6 @@ namespace ScreenShotLambda.Interfaces
         /// 異常通知
         /// </summary>
         /// <param name="message"></param>
-        /// <param name="context"></param>
-        Task sendErrorMessage(string message, ILambdaContext context);
+        Task SendErrorMessage(string message);
     }
 }
