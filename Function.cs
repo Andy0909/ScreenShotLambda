@@ -2,38 +2,41 @@ using Amazon.Lambda.Core;
 using Amazon.Lambda.SQSEvents;
 using Amazon.SQS;
 using Amazon.S3;
-using ScreenShotLambda.Interfaces;
-using ScreenShotLambda.Services;
-using ScreenShotLambda.DTOs;
+using EcScreenShot.Interfaces;
+using EcScreenShot.Services;
 using Microsoft.Extensions.DependencyInjection;
-using Newtonsoft.Json;
 
 // Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.
 [assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.SystemTextJson.DefaultLambdaJsonSerializer))]
 
 namespace ScreenShotLambda
 {
+    /// <summary>
+    /// lambda åŸ·è¡Œå…¥å£
+    /// </summary>
     public class Function
     {
-        // ¤å¦rÀÉ¨Ó·½¸ô®|
-        private readonly string sourceDir;
+        /// <summary>
+        /// æ–‡å­—æª”ä¾†æºè·¯å¾‘
+        /// </summary>
+        private readonly string sourceDir = "/var/task/.fonts";
 
-        // ¤å¦rÀÉ±ı½Æ»sªº¥Ø¼Ğ¸ô®|
-        private readonly string destinationDir;
+        /// <summary>
+        /// æ–‡å­—æª”æ¬²è¤‡è£½çš„ç›®æ¨™è·¯å¾‘
+        /// </summary>
+        private readonly string destinationDir = "/tmp/.fonts";
 
-        // ¬Û¨Ìª`¤JªA°È¶°¦Xª«¥ó
+        /// <summary>
+        /// ç›¸ä¾æ³¨å…¥æœå‹™é›†åˆç‰©ä»¶
+        /// </summary>
         private readonly ServiceCollection providerServices;
 
-        // «Øºc¤l
+        /// <summary>
+        /// å»ºæ§‹å­
+        /// </summary>
         public Function()
         {
-            this.sourceDir = "/var/task/.fonts";
-
-            this.destinationDir = "/tmp/.fonts";
-
             this.providerServices = new ServiceCollection();
-
-            ConfigureServices(this.providerServices);
         }
 
         /// <summary>
@@ -46,101 +49,88 @@ namespace ScreenShotLambda
         public async Task FunctionHandler(SQSEvent evnt, ILambdaContext context)
         {
 
-            foreach (var message in evnt.Records)
-            {
-                await ProcessMessageAsync(message, context);
-            }
-        }
-
-        private async Task ProcessMessageAsync(SQSEvent.SQSMessage message, ILambdaContext context)
-        {
             try
             {
-                // ¸ÑªR SQS °T®§¤¤ªº­q³æ¸ê°T
-                var queueMessage = JsonConvert.DeserializeObject<QueueMessage>(message.Body);
-
-                // ´£¨ú­q³æ½s¸¹©M½æ³õ½s¸¹
-                var screenShotUrl = queueMessage.screenShotUrl;
-
-                context.Logger.LogInformation($"SQS °T®§¸ÑªR§¹¦¨, screenShotUrl:{screenShotUrl}");
-
-                // ½Æ»s¦r«¬ÀÉ®×¨ì tmp ¸ê®Æ§¨
-                copyFontsToTmp();
-
-                context.Logger.LogInformation($"½Æ»s¦r«¬ÀÉ®×§¹¦¨");
-
-                // «Ø¥ß¨Ì¿àª`¤JªA°È´£¨ÑªÌ
-                var serviceProvider = this.providerServices.BuildServiceProvider();
-
-                // ¨ú±o screenShotService
-                var screenShotService = serviceProvider.GetService<IScreenShot>();
-
-                // ¶i¦æ§Ö·Ó
-                await screenShotService.screenShot(screenShotUrl, context);
-
-                // ¨ú±o imageUploadService
-                var imageUploadService = serviceProvider.GetService<IImageUpload>();
-
-                // ¤W¶Ç§Ö·Ó¹Ï¤ù¦Ü S3
-                await imageUploadService.uploadImageToS3(context);
-            }
-            catch (JsonException e)
-            {
-                // «Ø¥ß¨Ì¿àª`¤JªA°È´£¨ÑªÌ
-                var serviceProvider = this.providerServices.BuildServiceProvider();
-
-                // ¨ú±o errorNotifyService
-                var errorNotifyService = serviceProvider.GetService<IErrorNotify>();
-
-                await errorNotifyService.sendErrorMessage($"QueueMessage JsonException: {e.Message}", context);
+                // å»ºç«‹ä¾è³´æ³¨å…¥
+                ServiceProvider serviceProvider = this.BuildDependencyInjectionServiceProvider(context.Logger);
+            
+                // è¤‡è£½å­—å‹æª”æ¡ˆåˆ° tmp è³‡æ–™å¤¾
+                CopyFontsToTmp();
+            
+                context.Logger.LogInformation($"è¤‡è£½å­—å‹æª”æ¡ˆå®Œæˆ");
+            
+                // å–å¾— ScreenShotController
+                ScreenShotController? screenShotController = serviceProvider.GetService<ScreenShotController>();
+            
+                if (screenShotController != null)
+                {
+                    foreach (var message in evnt.Records)
+                    {
+                        // åŸ·è¡Œå¿«ç…§
+                        await screenShotController.HandleScreenShot(message);
+                    }
+                }
+                else
+                {
+                    context.Logger.LogError($"screenShotController ç‚º nullï¼Œç„¡æ³•åŸ·è¡Œè¨‚å–®å¿«ç…§ä¸»ç¨‹å¼");
+                }
             }
             catch (Exception e)
             {
-                // «Ø¥ß¨Ì¿àª`¤JªA°È´£¨ÑªÌ
-                var serviceProvider = this.providerServices.BuildServiceProvider();
-
-                // ¨ú±o errorNotifyService
-                var errorNotifyService = serviceProvider.GetService<IErrorNotify>();
-
-                await errorNotifyService.sendErrorMessage($"§Ö·Ó¥Dµ{¦¡¿ù»~: {e.Message}¡A±N¶i¦æ­«¸Õ", context);
-
-                // ¨ú±o errorRetryService
-                var errorRetryService = serviceProvider.GetService<IErrorRetry>();
-
-                // ­«µo queue ¶i¦æ­«¸Õ
-                await errorRetryService.retryErrorQueue(message, context);
+                context.Logger.LogError($"FunctionHandler ç™¼ç”ŸéŒ¯èª¤: {e.Message}");
             }
         }
 
         /// <summary>
-        /// ±N¤å¦rÀÉ½Æ»s¨ì /tmp/fonts
+        /// å°‡æ–‡å­—æª”è¤‡è£½åˆ° /tmp/fonts
         /// </summary>
         private void copyFontsToTmp()
         {
-            // ½T«O¥Ø¼Ğ¸ê®Æ§¨¦s¦b
+            // ç¢ºä¿ç›®æ¨™è³‡æ–™å¤¾å­˜åœ¨
             if (!Directory.Exists(this.destinationDir))
             {
                 Directory.CreateDirectory(this.destinationDir);
             }
 
-            // ½Æ»s¤å¦rÀÉ
+            // è¤‡è£½æ–‡å­—æª”
             File.Copy(this.sourceDir + "/font.ttc", this.destinationDir + "/font.ttc", true);
         }
 
         /// <summary>
-        /// Dependency Injection ³]©w
+        /// å»ºç«‹ç›¸ä¾æ³¨å…¥ç‰©ä»¶
         /// </summary>
-        /// <param name="serviceCollection">Service Collection</param>
-        private void ConfigureServices(IServiceCollection serviceCollection)
+        /// <param name="logger">Lambda Log ç‰©ä»¶</param>
+        /// <returns> ç›¸ä¾æ³¨å…¥æœå‹™é›†åˆå»ºç½®ç‰©ä»¶ </returns>
+        private ServiceProvider BuildDependencyInjectionServiceProvider(ILambdaLogger logger)
         {
-            // «Ø¥ß¨Ì¿àª`¤J
-            serviceCollection.AddScoped<IImageUpload, ImageUploadService>();
-            serviceCollection.AddScoped<IScreenShot, ScreenShotService>();
-            serviceCollection.AddScoped<IErrorNotify, ErrorNotifyService>();
-            serviceCollection.AddScoped<IErrorRetry, ErrorRetryService>();
-            serviceCollection.AddScoped<TimeService>();
-            serviceCollection.AddScoped<IAmazonS3, AmazonS3Client>();
-            serviceCollection.AddScoped<IAmazonSQS, AmazonSQSClient>();
+            this.SetDependencyInjectionServiceProvider(logger);
+        
+            return this.providerServices.BuildServiceProvider();
+        }
+        
+        /// <summary>
+        /// è¨­å®šç›¸ä¾æ³¨å…¥ç‰©ä»¶
+        /// </summary>
+        /// <param name="logger">Lambda Log ç‰©ä»¶</param>
+        private void SetDependencyInjectionServiceProvider(ILambdaLogger logger)
+        {
+            // å»ºç«‹ä¾è³´æ³¨å…¥ - controller
+            this.providerServices.AddScoped<ScreenShotController>();
+        
+            // å»ºç«‹ä¾è³´æ³¨å…¥ - services
+            this.providerServices.AddScoped<IImageUpload, ImageUploadService>();
+            this.providerServices.AddScoped<IScreenShot, ScreenShotService>();
+            this.providerServices.AddScoped<IErrorNotify, ErrorNotifyService>();
+            this.providerServices.AddScoped<IEcApiCaller, EcApiCallerService>();
+            this.providerServices.AddScoped<IErrorRetry, ErrorRetryService>();
+            this.providerServices.AddScoped<IQueueDelete, QueueDeleteService>();
+            this.providerServices.AddScoped<TimeService>();
+            this.providerServices.AddHttpClient();
+        
+            // å»ºç«‹ä¾è³´æ³¨å…¥ - AWS
+            this.providerServices.AddScoped<ILambdaLogger>(ServiceProvider => logger);
+            this.providerServices.AddScoped<IAmazonS3, AmazonS3Client>();
+            this.providerServices.AddScoped<IAmazonSQS, AmazonSQSClient>();
         }
     }
 }
