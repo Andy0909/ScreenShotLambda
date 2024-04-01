@@ -1,14 +1,11 @@
-using Amazon.Lambda.Core;
-
 namespace ScreenShotLambda.Interfaces
 {
-    // ¹Ï¤ù¤W¶Ç¤¶­±
+    // åœ–ç‰‡ä¸Šå‚³ä»‹é¢
     public interface IImageUpload
     {
         /// <summary>
-        /// ¤W¶Ç§Ö·Ó¹Ï¤ù¦Ü S3
+        /// ä¸Šå‚³å¿«ç…§åœ–ç‰‡è‡³ S3
         /// </summary>
-        /// <param name="context"></param>
-        Task uploadImageToS3(ILambdaContext context);
+        Task UploadImageToS3();
     }
 }
