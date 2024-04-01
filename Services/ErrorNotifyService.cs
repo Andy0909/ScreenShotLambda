@@ -5,54 +5,78 @@ using System.Text.Json;
 
 namespace ScreenShotLambda.Services
 {
+    /// <summary>
+    /// 異常通知服務
+    /// </summary>
     class ErrorNotifyService : IErrorNotify
     {
-        // HTTP client
-        private readonly HttpClient httpClient;
+        /// <summary>
+        /// HTTP 物件
+        /// </summary>
+        private readonly IHttpClientFactory httpClientFactory;
 
-        // 設定 JSON 序列化
-        private readonly JsonSerializerOptions options;
-
-        // 取得台灣時間 service
+        /// <summary>
+        /// TimeService 物件
+        /// </summary>
         private readonly TimeService timeService;
 
-        // 建構子
-        public ErrorNotifyService(TimeService timeService)
+        /// <summary>
+        /// Lambda Log 物件
+        /// </summary>
+        private readonly ILambdaLogger logger;
+
+        /// <summary>
+        /// 建構子
+        /// </summary>
+        /// <param name="httpClientFactory">HttpClientFactory</param>
+        /// <param name="timeService">取得時間服務</param>
+        /// <param name="logger">log 紀錄</param>
+        public ErrorNotifyService(IHttpClientFactory httpClientFactory, TimeService timeService, ILambdaLogger logger)
         {
-            this.httpClient = new HttpClient();
-
-            this.options = new JsonSerializerOptions();
-
+            this.httpClientFactory = httpClientFactory;
             this.timeService = timeService;
+            this.logger = logger;
         }
 
         /// <summary>
         /// 異常通知
         /// </summary>
         /// <param name="message"></param>
-        /// <param name="context"></param>
-        public async Task sendErrorMessage(string message, ILambdaContext context)
+        public async Task SendErrorMessage(string message)
         {
             try
             {
-                var errorMessage = message + $"，時間：{timeService.getCurrentTaipeiTime()}";
+                var errorMessage = message + $"，時間：{timeService.GetCurrentTaipeiTime()}";
 
                 // 紀錄 log
-                context.Logger.LogInformation(errorMessage);
+                this.logger.LogInformation(errorMessage);
 
                 // 要傳送的 JSON 資料 
                 var requestData = new { text = errorMessage };
-                var jsonRequestData = JsonSerializer.Serialize(requestData, this.options);
+                var jsonRequestData = JsonSerializer.Serialize(requestData);
 
+                // 建立 HttpClient
+                HttpClient httpClient = this.httpClientFactory.CreateClient();
+                
                 // 使用 StringContent 將 JSON 資料包裝成 HTTP 內容
-                var content = new StringContent(jsonRequestData, Encoding.UTF8, "application/json");
-
+                HttpContent content = new StringContent(jsonRequestData, Encoding.UTF8, "application/json");
+                
                 // 發送 POST 請求
-                var response = await this.httpClient.PostAsync("your teams webhook url", content);
+                string teamsWebhookUrl = Environment.GetEnvironmentVariable("TEAMS_WEBHOOK_URL") ?? "";
+                HttpResponseMessage response = await httpClient.PostAsync(teamsWebhookUrl, content);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    this.logger.LogError($"呼叫 TeamsWebhookUrl 失敗。HTTP 狀態碼：{response.StatusCode}");
+                }
+            }
+            catch (HttpRequestException e)
+            {
+                this.logger.LogError($"呼叫 TeamsWebhookUrl 發生網路錯誤：{e.Message}");
             }
             catch (Exception e)
             {
-                context.Logger.LogInformation($"呼叫 TeamsWebhookUrl 發生錯誤：{e.Message}");
+                this.logger.LogError($"呼叫 TeamsWebhookUrl 發生錯誤：{e.Message}");
             }
         }
     }
