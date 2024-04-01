@@ -77,29 +77,28 @@ namespace ScreenShotLambda
                 // 解析 SQS 訊息中的訂單資訊
                 var queueMessage = JsonSerializer.Deserialize<QueueMessage>(message.Body);
 
-                // 提取訂單編號和賣場編號
-                var orderId = queueMessage?.orderId;
-                var martCode = queueMessage?.martCode;
+                // 提取快照網址
+                var screenShotUrl = queueMessage?.screenShotUrl;
 
-                this.logger.LogInformation($"SQS 訊息解析完成。訂單編號：{orderId}，賣場編號：{martCode}");
+                this.logger.LogInformation($"SQS 訊息解析完成");
 
-                if (!string.IsNullOrEmpty(orderId) && !string.IsNullOrEmpty(martCode))
+                if (!string.IsNullOrEmpty(screenShotUrl))
                 {
                     // 進行快照
-                    await this.screenShotService.ScreenShot(orderId, martCode);
+                    await this.screenShotService.ScreenShot(screenShotUrl);
 
                     // 上傳快照圖片至 S3
-                    await this.imageUploadService.UploadImageToS3(orderId, martCode);
+                    await this.imageUploadService.UploadImageToS3();
 
                     // 刪除 queue
                     var receiptHandle = message.ReceiptHandle;
-                    await this.queueDeleteService.DeleteMessage(receiptHandle, orderId, martCode);
+                    await this.queueDeleteService.DeleteMessage(receiptHandle);
                 }
             }
             catch (JsonException e)
             {
                 // 異常通知
-                await this.errorNotifyService.SendErrorMessage($"OrderInfo JsonException: {e.Message}");
+                await this.errorNotifyService.SendErrorMessage($"queueMessage JsonException: {e.Message}");
             }
             catch (Exception e)
             {
