@@ -6,67 +6,80 @@ using PuppeteerSharp;
 
 namespace ScreenShotLambda.Services
 {
+    /// <summary>
+    /// å¿«ç…§æœå‹™
+    /// </summary>
     class ScreenShotService : IScreenShot
     {
-        // ­¶­± 404
+        /// <summary>
+        /// HTTP ç‹€æ…‹ç¢¼ 404
+        /// </summary>
         private readonly int notFoundCode = 404;
 
-        // ²§±`³qª¾ service
+        /// <summary>
+        /// ç•°å¸¸é€šçŸ¥ç‰©ä»¶
+        /// </summary>
         private readonly IErrorNotify errorNotifyService;
 
-        // «Øºc¤l
-        public ScreenShotService(IErrorNotify errorNotifyService)
+        /// <summary>
+        /// Lambda Log ç‰©ä»¶
+        /// </summary>
+        private readonly ILambdaLogger logger;
+
+        /// <summary>
+        /// å»ºæ§‹å­
+        /// <param name="errorNotifyService">ç•°å¸¸é€šçŸ¥æœå‹™</param>
+        /// <param name="logger">log ç´€éŒ„</param>
+        /// </summary>
+        public ScreenShotService(IErrorNotify errorNotifyService, ILambdaLogger logger)
         {
             this.errorNotifyService = errorNotifyService;
+            this.logger = logger;
         }
 
         /// <summary>
-        /// ¶i¦æ½æ³õ§Ö·Ó
+        /// é€²è¡Œè³£å ´å¿«ç…§
         /// </summary>
         /// <param name="screenShotUrl"></param>
-        /// <param name="context"></param>
-        public async Task screenShot(string screenShotUrl, ILambdaContext context)
+        public async Task ScreenShot(string screenShotUrl)
         {
            try
            {
+                // HeadlessChromium.Puppeteer.Lambda.Dotnet å®˜ç¶²æä¾›çš„ code
                 var loggerFactory = LoggerFactory.Create(builder => builder.AddConsole());
-
                 var browserLauncher = new HeadlessChromiumPuppeteerLauncher(loggerFactory);
+                var browser = await browserLauncher.LaunchAsync();
+                var page = await browser.NewPageAsync();
+                var response = await page.GoToAsync(screenShotUrl);
 
-                await using (var browser = await browserLauncher.LaunchAsync())
-
-                await using (var page = await browser.NewPageAsync())
+                // è‹¥ status ç‚º 404 å‰‡ç™¼ç•°å¸¸é€šçŸ¥
+                if ((int)response.Status == this.notFoundCode)
                 {
-                    var response = await page.GoToAsync(screenShotUrl);
-
-                    if ((int)response.Status == this.notFoundCode)
+                    await this.errorNotifyService.SendErrorMessage($"æ‰¾ä¸åˆ°æ¬²åŸ·è¡Œå¿«ç…§ä¹‹é é¢");
+                }
+                else
+                {
+                    // è¨­å®šå¿«ç…§ç•«é¢å¯¬åº¦
+                    await page.SetViewportAsync(new ViewPortOptions
                     {
-                        await this.errorNotifyService.sendErrorMessage($"­¶­±¿ù»~¡AµLªk¶i¦æ§Ö·Ó¡C", context);
-                    }
-                    else
+                        Width = 1280
+                    });
+                
+                    // å°‡ fullPage é¸é …è¨­ç½®ç‚º trueï¼Œä»¥æ•æ‰æ•´å€‹é é¢çš„æˆªåœ–
+                    var screenshotOptions = new ScreenshotOptions
                     {
-                        // ³]©w§Ö·Óµe­±¼e«×
-                        await page.SetViewportAsync(new ViewPortOptions
-                        {
-                            Width = 1280
-                        });
-
-                        // ±N fullPage ¿ï¶µ³]¸m¬° true¡A¥H®·®»¾ã­Ó­¶­±ªººI¹Ï
-                        var screenshotOptions = new ScreenshotOptions
-                        {
-                            FullPage = true
-                        };
-
-                        // ±N§Ö·Ó¼È¦sÀÉ©ñ¦b tmp ¸ê®Æ§¨©³¤U
-                        await page.ScreenshotAsync($"/tmp/screenShot.jpg", screenshotOptions);
-
-                        context.Logger.LogInformation($"°õ¦æ§Ö·Ó¦¨¥\¡C");
-                    }
+                        FullPage = true
+                    };
+                
+                    // å°‡å¿«ç…§æš«å­˜æª”æ”¾åœ¨ tmp è³‡æ–™å¤¾åº•ä¸‹
+                    await page.ScreenshotAsync($"/tmp/screenShot.jpg", screenshotOptions);
+                
+                    this.logger.LogInformation($"åŸ·è¡Œå¿«ç…§æˆåŠŸ");
                 }
            }
            catch (Exception e)
            {
-                await this.errorNotifyService.sendErrorMessage($"°õ¦æ§Ö·Ó¥¢±Ñ : {e.Message}¡C", context);
+                await this.errorNotifyService.SendErrorMessage($"åŸ·è¡Œå¿«ç…§å¤±æ•— : {e.Message}");
            }
         }
     }
