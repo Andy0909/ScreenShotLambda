@@ -2,8 +2,8 @@ using Amazon.Lambda.Core;
 using Amazon.Lambda.SQSEvents;
 using Amazon.SQS;
 using Amazon.S3;
-using EcScreenShot.Interfaces;
-using EcScreenShot.Services;
+using ScreenShotLambda.Interfaces;
+using ScreenShotLambda.Services;
 using Microsoft.Extensions.DependencyInjection;
 
 // Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.
@@ -121,7 +121,6 @@ namespace ScreenShotLambda
             this.providerServices.AddScoped<IImageUpload, ImageUploadService>();
             this.providerServices.AddScoped<IScreenShot, ScreenShotService>();
             this.providerServices.AddScoped<IErrorNotify, ErrorNotifyService>();
-            this.providerServices.AddScoped<IEcApiCaller, EcApiCallerService>();
             this.providerServices.AddScoped<IErrorRetry, ErrorRetryService>();
             this.providerServices.AddScoped<IQueueDelete, QueueDeleteService>();
             this.providerServices.AddScoped<TimeService>();
