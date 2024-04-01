@@ -8,11 +8,11 @@ namespace ScreenShotLambda.DTOs
         /// <summary>
         /// 快照網址
         /// </summary>
-        public string screenShotUrl { get; set; }
+        public string screenShotUrl { get; set; } = string.Empty;
 
         /// <summary>
         /// 重試次數
         /// </summary>
-        public int retryCount { get; set; }
+        public int retryCount { get; set; } = 0;
     }
 }
