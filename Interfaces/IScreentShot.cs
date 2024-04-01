@@ -1,5 +1,3 @@
-using Amazon.Lambda.Core;
-
 namespace ScreenShotLambda.Interfaces
 {
     // 快照介面
@@ -9,7 +7,6 @@ namespace ScreenShotLambda.Interfaces
         /// 進行快照
         /// </summary>
         /// <param name="screenShotUrl"></param>
-        /// <param name="context"></param>
-        Task screenShot(string screenShotUrl, ILambdaContext context);
+        Task ScreenShot(string screenShotUrl);
     }
 }
